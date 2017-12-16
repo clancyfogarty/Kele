@@ -8,10 +8,10 @@ class Kele
   base_uri 'https://www.bloc.io/api/v1'
 
   def initialize(email, password)
-    user_info = self.class.post("/sessions", body: { "email": email, "password": password })
-    @user_auth_code = user_info['auth_token']
-    puts @user_auth_code
-    raise 'Invalid email or password' if user_info.code != 200
+    @email = email
+    options = { body: { email: email, password: password } }
+    response = self.class.post('/sessions', options)
+    response["auth_token"] ? @auth_token = response["auth_token"] : puts(response["message"])
   end
 
   def get_me #return current user from Bloc API
@@ -22,5 +22,24 @@ class Kele
   def get_mentor_availability(mentor_id)
     response = self.class.get("/mentors/#{mentor_id}/student_availability", headers: { "authorization" => @user_auth_code })
     schedule = JSON.parse(response.body, symbolize_names: true)
+  end
+
+  def get_messages(page=nil)
+    options = { headers: { "authorization" => @auth_token } }
+    options.merge!({ body: { "page"=> page } }) unless page == nil
+    response = self.class.get("/message_threads", options )
+    messages = JSON.parse(response.body, symbolize_names: true)
+  end
+
+  def create_message(recipient_id, subject, stripped_text, token=nil)
+    options = { headers: { "authorization" => @auth_token },
+                body: {"sender" => @email,
+                       "recipient_id" => recipient_id,
+                       "stripped-text" => stripped_text,
+                       "subject" => subject
+                    }
+              }
+    options[:body][:token] = token if token
+    response = self.class.post('/messages', options)
   end
 end
