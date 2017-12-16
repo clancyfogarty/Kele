@@ -42,4 +42,15 @@ class Kele
     options[:body][:token] = token if token
     response = self.class.post('/messages', options)
   end
+
+  def create_submission(branch, commit_link, checkpoint_id, comment, enrollment_id)
+    options = { headers: { "authorization" => @auth_token },
+                body: { assignment_branch: branch
+                        assignment_commit_link: commit_link,
+                        checkpoint_id: checkpoint_id,
+                        comment: comment,
+                        enrollment_id: enrollment_id }
+              }
+    response = self.class.post('/checkpoint_submissions', options)
+  end
 end
